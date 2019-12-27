@@ -59,46 +59,41 @@ void shift_bytes_msb(uint8_t bytes[], unsigned int numberOfBytes)
 
 void set_tube_digit(uint8_t bytes[], uint8_t digit, unsigned int tube)
 {
-	bytes[tube] = digit;
+	// no bounds check done
+	bytes[tube-1] = digit;
 }
 
 void display(uint8_t bytes[], unsigned int numberOfBytes)
 {
-	unsigned int displayBytesSize = 0;
-	
+	unsigned int squishedBytesSize = 0;
 	
 	if (numberOfBytes % 2 == 0) //even
 	{
-		displayBytesSize = numberOfBytes/2;
+		squishedBytesSize = numberOfBytes/2;
 	}
 	else // odd
 	{
-		displayBytesSize = (numberOfBytes+1)/2;
+		squishedBytesSize = (numberOfBytes+1)/2;
 	}
-	
-	uint8_t* displayBytes = malloc(sizeof(uint8_t) * displayBytesSize);
-	// no malloc check eh
 	
 	// squish the array into half of its size since 1 74HC595 controls 2 K155ID1
 	for (unsigned int i = 0; i < numberOfBytes; i++)
 	{
 		// no bounds checking on going over display bytes size, better hope its correct.
-		
-		// on odd elements, shift it 4 and put it in the same byte as the previous element.
-		
-		if (i%2 == 0) //even
+		// on odd elements, shift it left 4 and put it in the same byte as the previous element.
+		// on even elements, 
+		if (i%2 == 0) // even
 		{
-			displayBytes[i] = bytes[i];
+			bytes[i/2] = bytes[i];
 		}
+		
 		else // odd
 		{
-			displayBytes[i-1] |= bytes[i]<<4;
+			bytes[(i-1)/2] |= bytes[i]<<4;
 		}
 	}
 	
-	shift_bytes_msb(bytes, numberOfBytes);
-	
-	free(displayBytes);
+	shift_bytes_msb(bytes, squishedBytesSize);
 }
 
 // nixie clock driver might already have this functionality.
@@ -137,19 +132,28 @@ int main(void)
 	
 	const int NumberOfTubes = 4;
 	
+	// Do I want some kind of init here?
+	//hc595_clock_pulse();
+	//hc595_latch_pulse();
+	
 	// Really this should all be encapsulated in a class buuut not sure how to set the #defines properly to PORTX DDRX etc.
 	scroll(NumberOfTubes);
+	// delay needed here for scroll? 
+	// delay_ms(10000); // 10 seconds
 	
 	uint8_t nixie[NumberOfTubes];
-	set_tube_digit(nixie, 2, 1);
+	set_tube_digit(nixie, 2, 1); // tubes are numbered naturally starting at 1, function accounts for this.
 	set_tube_digit(nixie, 0, 2);
 	set_tube_digit(nixie, 1, 3);
 	set_tube_digit(nixie, 9, 4);
 	display(nixie, NumberOfTubes);
 	
-    while (1) 
-    {
-		// can count or do something here.
-    }
+    	while (1) 
+	{
+		delay_ms(10000); // 10 seconds
+		scroll(NumberOfTubes);
+		//delay_ms(10000); // 10 seconds
+		display(nixie, NumberOfTubes);
+    	}
 }
 
