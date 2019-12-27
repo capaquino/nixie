@@ -10,7 +10,7 @@
 #include <avr/io.h>
 #include <stdlib.h>
 
-#define F_CPU 8000000
+#define F_CPU 1000000
 #include <util/delay.h>
 
 #define HC595 PORTC
@@ -35,11 +35,14 @@ void hc595_latch_pulse(void)
 
 void shift_bytes_msb(uint8_t bytes[], unsigned int numberOfBytes)
 {
+	uint8_t data = 0;
+	
 	for (unsigned int b = 0; b < numberOfBytes; b++)
 	{
+		data = bytes[b];
 		for (uint8_t i = 0; i < 8; i++)
 		{
-			if (bytes[b] & 0x80)
+			if (data & 0x80)
 			{
 				HC595 |= 1<<HC595_DATA;
 			}
@@ -50,7 +53,7 @@ void shift_bytes_msb(uint8_t bytes[], unsigned int numberOfBytes)
 		
 			hc595_clock_pulse();
 		
-			bytes[b]<<=1; // pretty sure this doesn't flow into the next element left of it.
+			data<<=1; // pretty sure this doesn't flow into the next element left of it.
 		}
 	}
 	
@@ -109,6 +112,7 @@ void scroll(unsigned int numberOfTubes)
 		}
 		
 		display(scrollBytes, numberOfTubes);
+		_delay_ms(200);
 	}
 }
 
@@ -150,9 +154,9 @@ int main(void)
 	
     	while (1) 
 	{
-		delay_ms(10000); // 10 seconds
+		_delay_ms(5000); // 10 seconds
 		scroll(NumberOfTubes);
-		//delay_ms(10000); // 10 seconds
+		_delay_ms(5000); // 10 seconds
 		display(nixie, NumberOfTubes);
     	}
 }
