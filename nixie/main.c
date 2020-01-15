@@ -112,7 +112,7 @@ void scroll(unsigned int numberOfTubes)
 		}
 		
 		display(scrollBytes, numberOfTubes);
-		_delay_ms(200);
+		_delay_ms(500);
 	}
 }
 
@@ -129,6 +129,8 @@ void scroll(unsigned int numberOfTubes)
 	//
 //}
 
+#define OFF 0xF
+
 int main(void)
 {
 	// Set control lines to output.
@@ -141,23 +143,46 @@ int main(void)
 	//hc595_latch_pulse();
 	
 	// Really this should all be encapsulated in a class buuut not sure how to set the #defines properly to PORTX DDRX etc.
-	scroll(NumberOfTubes);
+	//scroll(NumberOfTubes);
 	// delay needed here for scroll? 
 	// delay_ms(10000); // 10 seconds
 	
 	uint8_t nixie[NumberOfTubes];
-	set_tube_digit(nixie, 2, 1); // tubes are numbered naturally starting at 1, function accounts for this.
-	set_tube_digit(nixie, 0, 2);
-	set_tube_digit(nixie, 1, 3);
-	set_tube_digit(nixie, 9, 4);
-	display(nixie, NumberOfTubes);
+	//set_tube_digit(nixie, 2, 1); // tubes are numbered naturally starting at 1, function accounts for this.
+	//set_tube_digit(nixie, 0, 2);
+	//set_tube_digit(nixie, 1, 3);
+	//set_tube_digit(nixie, 9, 4);
+	
+	// for turning off set anything from 10-15
+	set_tube_digit(nixie, 0xF, 1); // tubes are numbered naturally starting at 1, function accounts for this.
+	set_tube_digit(nixie, 0xF, 2);
+	set_tube_digit(nixie, 0xF, 3);
+	set_tube_digit(nixie, 0xF, 4);
+	
 	
     	while (1) 
 	{
-		_delay_ms(5000); // 10 seconds
-		scroll(NumberOfTubes);
-		_delay_ms(5000); // 10 seconds
 		display(nixie, NumberOfTubes);
+		_delay_ms(1000);
+		scroll(NumberOfTubes);
+		
+		for (uint8_t n = 0; n<10;)
+		{
+			set_tube_digit(nixie, n, 4);
+			n++;
+			display(nixie, NumberOfTubes);
+			_delay_ms(500);
+			set_tube_digit(nixie, OFF, 4);
+			display(nixie, NumberOfTubes);
+			
+			set_tube_digit(nixie, n, 3);
+			n++;
+			display(nixie, NumberOfTubes);
+			_delay_ms(500);
+			set_tube_digit(nixie, OFF, 3);
+			display(nixie, NumberOfTubes);
+		}
+		
     	}
 }
 
